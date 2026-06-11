@@ -17,6 +17,17 @@ npm run dev
 
 Built with Next.js. Article extraction happens in a small API route; everything voice-related happens client-side in a web worker.
 
+## Chrome extension
+
+Perch is also a side-panel extension: open any article, click the Perch icon, listen. Extraction runs Readability directly on the page (no server at all), and the ONNX runtime is bundled inside the extension as Manifest V3 requires.
+
+```bash
+npm install
+npm run build:extension
+```
+
+Then in Chrome: `chrome://extensions` → enable **Developer mode** → **Load unpacked** → select `extension/dist`.
+
 ## License
 
 Public domain ([Unlicense](LICENSE)) — do whatever you want with it.

@@ -1,0 +1,124 @@
+/* Bundled fonts (extension must work offline) */
+@font-face {
+  font-family: "Young Serif";
+  src: url("fonts/young-serif.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Literata";
+  src: url("fonts/literata.woff2") format("woff2");
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Literata";
+  src: url("fonts/literata-italic.woff2") format("woff2");
+  font-weight: 200 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Spline Sans Mono";
+  src: url("fonts/spline-sans-mono.woff2") format("woff2");
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-display: "Young Serif";
+  --font-body: "Literata";
+  --font-mono: "Spline Sans Mono";
+}
+
+/* Side-panel sizing: narrow, dense */
+body {
+  font-size: 15px;
+  min-width: 300px;
+}
+
+.topbar {
+  padding: var(--space-md) var(--space-md);
+}
+
+.topbar-device {
+  font-size: 0.62rem;
+}
+
+.landing.panel-landing {
+  width: auto;
+  margin: 0;
+  padding: var(--space-lg) var(--space-md) var(--space-2xl);
+}
+
+.panel-landing h1 {
+  font-size: 1.7rem;
+}
+
+.panel-landing .intake {
+  margin-top: var(--space-xl);
+}
+
+.panel-landing .text-input {
+  min-height: 7rem;
+}
+
+.panel-landing .landing-note {
+  margin-top: var(--space-xl);
+}
+
+.fetching {
+  width: auto;
+  margin: 0;
+  padding: var(--space-2xl) var(--space-md);
+}
+
+.article {
+  width: auto;
+  margin: 0;
+  padding: var(--space-md) var(--space-md) 11rem;
+}
+
+.article-title {
+  font-size: 1.45rem;
+}
+
+.article-meta {
+  margin-bottom: var(--space-lg);
+}
+
+.article-body p {
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
+.dock-inner {
+  width: auto;
+  margin: 0 var(--space-md);
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  padding-bottom: var(--space-md);
+}
+
+.dock-middle {
+  order: -1;
+  flex-basis: 100%;
+}
+
+.dock-selects {
+  margin-left: auto;
+}
+
+.dock-select {
+  max-width: 9rem;
+}
+
+.follow-pill {
+  bottom: 9.5rem;
+}

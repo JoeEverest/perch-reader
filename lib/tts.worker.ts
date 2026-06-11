@@ -1,8 +1,15 @@
 /// <reference lib="webworker" />
 import { KokoroTTS } from "kokoro-js";
+import { env } from "@huggingface/transformers";
 import type { MainToWorker, WorkerToMain, SynthesisJob } from "./tts-protocol";
 
 declare const self: DedicatedWorkerGlobalScope;
+
+// MV3 forbids remote code: inside the extension, load the ONNX runtime
+// from files bundled next to this worker instead of the default CDN.
+if (self.location.protocol === "chrome-extension:" && env.backends.onnx?.wasm) {
+  env.backends.onnx.wasm.wasmPaths = new URL("ort/", self.location.href).href;
+}
 
 const MODEL_ID = "onnx-community/Kokoro-82M-v1.0-ONNX";
 

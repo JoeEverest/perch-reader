@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "build:extension": "node extension/build.mjs"
   },
   "dependencies": {
+    "@huggingface/transformers": "^3.8.1",
     "@mozilla/readability": "^0.6.0",
     "jsdom": "^26.1.0",
     "kokoro-js": "^1.2.1",
@@ -17,11 +19,13 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@types/chrome": "^0.1.43",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "esbuild": "^0.28.1",
     "typescript": "^5"
   }
 }

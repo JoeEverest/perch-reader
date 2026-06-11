@@ -1,22 +1,14 @@
 import { NextResponse } from "next/server";
 import { JSDOM, VirtualConsole } from "jsdom";
 import { Readability } from "@mozilla/readability";
+import { blocksFromDocument } from "@/lib/blocks";
 
 export const runtime = "nodejs";
-
-const BLOCK_SELECTOR = "p, h1, h2, h3, h4, h5, h6, li, pre, figcaption";
 
 function htmlToParagraphs(html: string): string[] {
   const virtualConsole = new VirtualConsole();
   const dom = new JSDOM(html, { virtualConsole });
-  const blocks = dom.window.document.querySelectorAll(BLOCK_SELECTOR);
-  const paragraphs: string[] = [];
-  for (const el of blocks) {
-    if (el.querySelector(BLOCK_SELECTOR)) continue;
-    const text = el.textContent?.replace(/\s+/g, " ").trim();
-    if (text) paragraphs.push(text);
-  }
-  return paragraphs;
+  return blocksFromDocument(dom.window.document);
 }
 
 export async function POST(req: Request) {

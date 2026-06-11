@@ -22,7 +22,11 @@ export type TtsState = {
 
 const DEFAULT_SECONDS_PER_CHAR = 0.062;
 
-export function useTts(voice: string, speed: number) {
+function defaultCreateWorker() {
+  return new Worker(new URL("./tts.worker.ts", import.meta.url), { type: "module" });
+}
+
+export function useTts(voice: string, speed: number, createWorker: () => Worker = defaultCreateWorker) {
   const workerRef = useRef<Worker | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
@@ -167,9 +171,7 @@ export function useTts(voice: string, speed: number) {
 
   // worker lifecycle
   useEffect(() => {
-    const worker = new Worker(new URL("./tts.worker.ts", import.meta.url), {
-      type: "module",
-    });
+    const worker = createWorker();
     workerRef.current = worker;
 
     worker.onmessage = (event: MessageEvent<WorkerToMain>) => {
@@ -184,11 +186,10 @@ export function useTts(voice: string, speed: number) {
         }
         if (totalBytes > 0) setModelProgress(Math.min(1, loaded / totalBytes));
       } else if (msg.type === "ready") {
+        // enqueue messages sent before this point are buffered by the worker,
+        // so there is nothing to re-send here
         setModelStatus("ready");
         setDevice(msg.device);
-        if (sentencesRef.current.length > 0) {
-          requeueMissingFrom(currentRef.current);
-        }
       } else if (msg.type === "init-error") {
         setModelStatus("error");
         setModelError(msg.message);
@@ -202,8 +203,9 @@ export function useTts(voice: string, speed: number) {
         } else {
           buf = ctx.createBuffer(1, Math.round(0.1 * ctx.sampleRate), ctx.sampleRate);
         }
+        const isNew = buffersRef.current[msg.index] === null;
         buffersRef.current[msg.index] = buf;
-        setGeneratedCount((c) => c + 1);
+        if (isNew) setGeneratedCount((c) => c + 1);
         if (waitingRef.current && msg.index === currentRef.current && playingRef.current) {
           startSentence(msg.index);
         }
