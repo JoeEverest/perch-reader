@@ -3,7 +3,8 @@
   "name": "Perch — read this article aloud",
   "version": "0.1.0",
   "description": "Reads the article on the current page aloud with Kokoro-82M running entirely on your device. Offline, private, open source.",
-  "permissions": ["sidePanel", "activeTab", "scripting"],
+  "permissions": ["sidePanel", "activeTab", "scripting", "storage"],
+  "host_permissions": ["http://*/*", "https://*/*"],
   "action": {
     "default_title": "Read aloud with Perch"
   },

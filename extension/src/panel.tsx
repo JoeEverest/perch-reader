@@ -12,6 +12,10 @@ type ExtractResult =
   | { ok: true; title: string; byline: string | null; siteName: string | null; paragraphs: string[] }
   | { ok: false; error: string };
 
+type ExtractEntry =
+  | { status: "pending"; t: number }
+  | { status: "done"; t: number; result: ExtractResult };
+
 function createExtensionWorker() {
   return new Worker(chrome.runtime.getURL("tts-worker.js"), { type: "module" });
 }
@@ -23,7 +27,7 @@ function PerchPanel() {
   const [article, setArticle] = useState<Article | null>(null);
   const [voice, setVoice] = useState("af_heart");
   const [speed, setSpeed] = useState(1.0);
-  const pendingExtract = useRef(false);
+  const pendingTimer = useRef<number | undefined>(undefined);
 
   const tts = useTts(voice, speed, createExtensionWorker);
 
@@ -40,59 +44,64 @@ function PerchPanel() {
     tts.load(flat, false);
   };
 
-  useEffect(() => {
-    const onMessage = (msg: { type?: string; result?: ExtractResult }) => {
-      if (msg?.type !== "perch-extract-result" || !msg.result || !pendingExtract.current) return;
-      pendingExtract.current = false;
-      if (msg.result.ok) {
-        beginReading({
-          title: msg.result.title,
-          byline: msg.result.byline,
-          siteName: msg.result.siteName,
-          paragraphs: msg.result.paragraphs.map(splitSentences).filter((p) => p.length > 0),
-        });
-      } else {
-        setError(msg.result.error);
+  // the background worker extracts on icon click and reports via session storage
+  const applyEntryRef = useRef<(entry: ExtractEntry | undefined, initial: boolean) => void>(
+    () => {}
+  );
+  applyEntryRef.current = (entry, initial) => {
+    clearTimeout(pendingTimer.current);
+    if (!entry) {
+      setPhase("input");
+      return;
+    }
+    if (entry.status === "pending") {
+      setError(null);
+      setPhase("extracting");
+      pendingTimer.current = window.setTimeout(() => {
+        setError("The page didn't answer. Try clicking the Perch icon again on the article tab.");
         setPhase("input");
-      }
-    };
-    chrome.runtime.onMessage.addListener(onMessage);
-    return () => chrome.runtime.onMessage.removeListener(onMessage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const extractFromPage = async () => {
-    setPhase("extracting");
-    setError(null);
-    pendingExtract.current = true;
-    try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tab?.id) throw new Error("no tab");
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ["extract.js"],
+      }, 10000);
+      return;
+    }
+    if (initial && Date.now() - entry.t > 60_000) {
+      // an old result from a previous session — don't start reading it unasked
+      setPhase("input");
+      return;
+    }
+    if (entry.result.ok) {
+      beginReading({
+        title: entry.result.title,
+        byline: entry.result.byline,
+        siteName: entry.result.siteName,
+        paragraphs: entry.result.paragraphs.map(splitSentences).filter((p) => p.length > 0),
       });
-      setTimeout(() => {
-        if (pendingExtract.current) {
-          pendingExtract.current = false;
-          setError("The page didn't answer. Try clicking the Perch icon again on the article tab.");
-          setPhase("input");
-        }
-      }, 8000);
-    } catch {
-      pendingExtract.current = false;
-      setError(
-        "Perch can't read this page (browser pages and some sites are off-limits). Paste the text below instead."
-      );
+    } else {
+      setError(`${entry.result.error} — try clicking the Perch icon while on the article.`);
       setPhase("input");
     }
   };
 
-  // extract the active tab as soon as the panel opens
   useEffect(() => {
-    void extractFromPage();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    chrome.storage.session
+      .get("extract")
+      .then(({ extract }) => applyEntryRef.current(extract as ExtractEntry | undefined, true));
+    const onChanged = (
+      changes: { [key: string]: chrome.storage.StorageChange },
+      area: string
+    ) => {
+      if (area === "session" && changes.extract) {
+        applyEntryRef.current(changes.extract.newValue as ExtractEntry | undefined, false);
+      }
+    };
+    chrome.storage.onChanged.addListener(onChanged);
+    return () => chrome.storage.onChanged.removeListener(onChanged);
   }, []);
+
+  const extractFromPage = () => {
+    setPhase("extracting");
+    setError(null);
+    void chrome.runtime.sendMessage({ type: "perch-request-extract" });
+  };
 
   const handleText = () => {
     const paragraphs = textToParagraphs(text);
