@@ -25,7 +25,7 @@ function post(msg: WorkerToMain, transfer: Transferable[] = []) {
 
 async function loadModel(device: "webgpu" | "wasm") {
   return KokoroTTS.from_pretrained(MODEL_ID, {
-    dtype: device === "webgpu" ? "fp32" : "q8",
+    dtype: device === "webgpu" ? "fp16" : "q8",
     device,
     progress_callback: (p: unknown) => {
       const info = p as { status: string; file?: string; loaded?: number; total?: number };
