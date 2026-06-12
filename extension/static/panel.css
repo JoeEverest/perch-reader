@@ -122,3 +122,7 @@ body {
 .follow-pill {
   bottom: 9.5rem;
 }
+
+.panel-reading-error {
+  padding: var(--space-md) var(--space-md) 0;
+}

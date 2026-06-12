@@ -56,10 +56,11 @@ function PerchPanel() {
     }
     if (entry.status === "pending") {
       setError(null);
-      setPhase("extracting");
+      // keep the current article (and playback controls) while re-extracting
+      setPhase((p) => (p === "reading" ? p : "extracting"));
       pendingTimer.current = window.setTimeout(() => {
         setError("The page didn't answer. Try clicking the Perch icon again on the article tab.");
-        setPhase("input");
+        setPhase((p) => (p === "reading" ? p : "input"));
       }, 10000);
       return;
     }
@@ -77,7 +78,7 @@ function PerchPanel() {
       });
     } else {
       setError(`${entry.result.error} — try clicking the Perch icon while on the article.`);
-      setPhase("input");
+      setPhase((p) => (p === "reading" ? p : "input"));
     }
   };
 
@@ -98,8 +99,8 @@ function PerchPanel() {
   }, []);
 
   const extractFromPage = () => {
-    setPhase("extracting");
     setError(null);
+    setPhase((p) => (p === "reading" ? p : "extracting"));
     void chrome.runtime.sendMessage({ type: "perch-request-extract" });
   };
 
@@ -188,6 +189,7 @@ function PerchPanel() {
 
       {phase === "reading" && article && (
         <>
+          {error && <p className="intake-error panel-reading-error">{error}</p>}
           <ArticleView
             article={article}
             paraOffsets={paraOffsets}
@@ -196,6 +198,7 @@ function PerchPanel() {
             listenEstimate={listenEstimate}
             onSeek={tts.seek}
             onBack={handleBack}
+            onRefresh={extractFromPage}
           />
           <PlayerBar
             state={tts.state}

@@ -17,6 +17,7 @@ type Props = {
   listenEstimate: string;
   onSeek: (index: number) => void;
   onBack: () => void;
+  onRefresh?: () => void;
 };
 
 export function ArticleView({
@@ -27,6 +28,7 @@ export function ArticleView({
   listenEstimate,
   onSeek,
   onBack,
+  onRefresh,
 }: Props) {
   const [follow, setFollow] = useState(true);
   const followRef = useRef(follow);
@@ -53,9 +55,16 @@ export function ArticleView({
 
   return (
     <main className="article">
-      <button className="article-back" onClick={onBack}>
-        ← New article
-      </button>
+      <div className="article-actions">
+        <button className="article-back" onClick={onBack}>
+          ← New article
+        </button>
+        {onRefresh && (
+          <button className="article-back" onClick={onRefresh}>
+            ↻ Read this page
+          </button>
+        )}
+      </div>
       <h1 className="article-title">{article.title}</h1>
       <div className="article-meta">
         {article.siteName && <span>{article.siteName}</span>}
